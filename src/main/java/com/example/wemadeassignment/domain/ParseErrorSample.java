@@ -10,7 +10,7 @@ public record ParseErrorSample(
         @Schema(description = "오류가 발생한 원본 줄 내용", example = "invalid,,line,data")
         String line,
 
-        @Schema(description = "오류 원인", example = "필드 수 불일치: 기대 7개, 실제 4개")
+        @Schema(description = "오류 원인", example = "컬럼 수 불일치: expected=12, actual=4")
         String reason
 ) {
 }

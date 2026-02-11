@@ -28,7 +28,7 @@ public record AnalysisResponse(
         @Schema(description = "HTTP 상태 코드별 요청 수", example = "{\"200\":12000,\"404\":500,\"500\":34}", nullable = true)
         Map<Integer, Long> statusCodeCounts,
 
-        @Schema(description = "HTTP 상태 그룹별 비율 (%)", example = "{\"2xx\":78.8,\"4xx\":18.5,\"5xx\":2.7}", nullable = true)
+        @Schema(description = "HTTP 상태 그룹별 비율 (0~1)", example = "{\"2xx\":0.788,\"4xx\":0.185,\"5xx\":0.027}", nullable = true)
         Map<String, Double> statusGroupRatios,
 
         @Schema(description = "요청이 많은 상위 경로별 요청 수", example = "{\"/api/users\":3200,\"/api/login\":2100}", nullable = true)
@@ -43,7 +43,7 @@ public record AnalysisResponse(
         @Schema(description = "파싱 오류 건수", example = "3", nullable = true)
         Integer parseErrorCount,
 
-        @Schema(description = "파싱 오류 샘플 (최대 5건)", nullable = true)
+        @Schema(description = "파싱 오류 샘플 (최대 10건)", nullable = true)
         List<ParseErrorSample> parseErrorSamples,
 
         @Schema(description = "분석 요청 생성 시각", example = "2025-01-15T10:30:00")
