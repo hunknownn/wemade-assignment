@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -103,6 +104,19 @@ class IpEnrichmentServiceImplTest {
 
         assertThat(results.get(0).country()).isEqualTo("UNKNOWN");
         verify(ipInfoClient, times(1)).fetch("8.8.8.8");
+    }
+
+    @Test
+    @DisplayName("HTTP 500 에러 후 재시도하여 성공")
+    void httpServerErrorRetryThenSuccess() {
+        when(ipInfoClient.fetch("8.8.8.8"))
+                .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
+                .thenReturn(SAMPLE);
+
+        List<IpInfo> results = service.enrich(List.of("8.8.8.8"));
+
+        assertThat(results.get(0).asName()).isEqualTo("Google LLC");
+        verify(ipInfoClient, times(2)).fetch("8.8.8.8");
     }
 
     @Test
