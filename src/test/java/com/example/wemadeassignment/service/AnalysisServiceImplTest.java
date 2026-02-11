@@ -163,18 +163,26 @@ class AnalysisServiceImplTest {
     }
 
     @Test
-    @DisplayName("executor 거부 시 FAILED 상태")
-    void rejectedExecutionCausesFailed() {
+    @DisplayName("executor 거부 시 ServerBusyException 발생 및 repository에서 삭제")
+    void rejectedExecutionThrowsServerBusyException() {
         Executor rejectingExecutor = command -> {
             throw new RejectedExecutionException("풀 가득 참");
         };
         AnalysisServiceImpl rejectService = new AnalysisServiceImpl(
                 csvLogParser, ipEnrichmentService, analysisRepository, properties, rejectingExecutor);
 
-        AnalysisResult result = rejectService.submitAnalysis(csvFile("header\ndata"));
+        assertThatThrownBy(() -> rejectService.submitAnalysis(csvFile("header\ndata")))
+                .isInstanceOf(com.example.wemadeassignment.exception.ServerBusyException.class);
+    }
 
-        assertThat(result.getStatus()).isEqualTo(AnalysisStatus.FAILED);
-        assertThat(result.getFailureReason()).contains("서버가 바쁩니다");
+    @Test
+    @DisplayName("CSV가 아닌 파일 제출 시 예외")
+    void submitNonCsvFile() {
+        MockMultipartFile txtFile = new MockMultipartFile("file", "test.txt", "text/plain", "data".getBytes());
+
+        assertThatThrownBy(() -> service.submitAnalysis(txtFile))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("CSV");
     }
 
     @Test

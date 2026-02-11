@@ -9,4 +9,6 @@ public interface AnalysisRepository {
     void save(AnalysisResult result);
 
     Optional<AnalysisResult> findById(String analysisId);
+
+    void deleteById(String analysisId);
 }
