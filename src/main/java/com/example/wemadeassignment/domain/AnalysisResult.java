@@ -26,6 +26,7 @@ public class AnalysisResult {
     private final Map<String, Long> ipCounts = new ConcurrentHashMap<>();
 
     private List<IpInfo> topIps = new ArrayList<>();
+    private Map<String, Double> statusGroupRatios = new ConcurrentHashMap<>();
     private int parseErrorCount;
     private List<ParseErrorSample> parseErrorSamples = new ArrayList<>();
 
@@ -37,5 +38,16 @@ public class AnalysisResult {
         this.analysisId = analysisId;
         this.status = AnalysisStatus.PROCESSING;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void complete() {
+        this.completedAt = LocalDateTime.now();
+        this.status = AnalysisStatus.COMPLETED;
+    }
+
+    public void fail(String reason) {
+        this.failureReason = reason;
+        this.completedAt = LocalDateTime.now();
+        this.status = AnalysisStatus.FAILED;
     }
 }
