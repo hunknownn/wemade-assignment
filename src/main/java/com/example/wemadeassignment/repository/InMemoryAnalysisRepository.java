@@ -21,4 +21,9 @@ public class InMemoryAnalysisRepository implements AnalysisRepository {
     public Optional<AnalysisResult> findById(String analysisId) {
         return Optional.ofNullable(store.get(analysisId));
     }
+
+    @Override
+    public void deleteById(String analysisId) {
+        store.remove(analysisId);
+    }
 }

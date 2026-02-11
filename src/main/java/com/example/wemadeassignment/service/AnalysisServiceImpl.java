@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
+import com.example.wemadeassignment.exception.ServerBusyException;
 import java.util.concurrent.RejectedExecutionException;
 
 @Service
@@ -59,9 +60,10 @@ public class AnalysisServiceImpl implements AnalysisService {
         try {
             analysisExecutor.execute(() -> executeAnalysis(analysisId, tempFile));
         } catch (RejectedExecutionException e) {
-            result.fail("서버가 바쁩니다. 잠시 후 다시 시도해주세요.");
+            analysisRepository.deleteById(analysisId);
             deleteTempFile(tempFile);
             log.warn("분석 요청 거부: analysisId={}", analysisId, e);
+            throw new ServerBusyException();
         }
 
         return result;
@@ -122,6 +124,10 @@ public class AnalysisServiceImpl implements AnalysisService {
         }
         if (file.getSize() > properties.maxFileSize()) {
             throw new IllegalArgumentException("파일 크기가 " + properties.maxFileSize() + " bytes를 초과합니다.");
+        }
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.toLowerCase().endsWith(".csv")) {
+            throw new IllegalArgumentException("CSV 파일만 업로드 가능합니다.");
         }
     }
 
