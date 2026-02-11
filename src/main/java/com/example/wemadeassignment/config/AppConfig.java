@@ -48,4 +48,16 @@ public class AppConfig {
         executor.initialize();
         return executor;
     }
+
+    /** IP 정보 병렬 조회용 I/O 스레드 풀 — topN과 무관하게 고정 */
+    @Bean(name = "ipEnrichmentExecutor")
+    public Executor ipEnrichmentExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("ip-enrichment-");
+        executor.initialize();
+        return executor;
+    }
 }

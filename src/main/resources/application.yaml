@@ -18,7 +18,7 @@ analysis:
 # ipinfo API 설정
 ipinfo:
   token: ${IPINFO_TOKEN:your-token-here}
-  base-url: https://ipinfo.io
+  base-url: https://api.ipinfo.io/lite
   timeout: 3000            # 타임아웃 (ms)
   max-retries: 2           # 최대 재시도 횟수
   cache:
