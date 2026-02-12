@@ -41,17 +41,25 @@ public class IpEnrichmentServiceImpl implements IpEnrichmentService {
                 .map(ip -> CompletableFuture.supplyAsync(() -> lookup(ip), executor))
                 .toList();
 
-        return futures.stream()
+        List<IpInfo> results = futures.stream()
                 .map(CompletableFuture::join)
                 .toList();
+
+        long cacheHits = results.stream().filter(r -> !r.isUnknown()).count();
+        log.info("IP 조회 완료: 전체={}건, 성공={}건, 실패={}건",
+                ips.size(), cacheHits, ips.size() - cacheHits);
+
+        return results;
     }
 
     private IpInfo lookup(String ip) {
         IpInfo cached = cache.getIfPresent(ip);
         if (cached != null) {
+            log.debug("캐시 히트: ip={}", ip);
             return cached;
         }
 
+        log.debug("캐시 미스, API 조회: ip={}", ip);
         IpInfo result = fetchWithRetry(ip);
         if (!result.isUnknown()) {
             cache.put(ip, result);

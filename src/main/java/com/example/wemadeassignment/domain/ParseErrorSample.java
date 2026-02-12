@@ -1,8 +1,16 @@
 package com.example.wemadeassignment.domain;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "CSV 파싱 오류 샘플")
 public record ParseErrorSample(
+        @Schema(description = "오류가 발생한 줄 번호", example = "42")
         int lineNumber,
+
+        @Schema(description = "오류가 발생한 원본 줄 내용", example = "invalid,,line,data")
         String line,
+
+        @Schema(description = "오류 원인", example = "컬럼 수 불일치: expected=12, actual=4")
         String reason
 ) {
 }

@@ -6,7 +6,10 @@ import com.example.wemadeassignment.dto.AnalysisSubmitResponse;
 import com.example.wemadeassignment.dto.ErrorResponse;
 import com.example.wemadeassignment.exception.AnalysisNotFoundException;
 import com.example.wemadeassignment.service.AnalysisService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,6 +27,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/v1/analysis")
 public class AnalysisController {
 
+    private static final Logger log = LoggerFactory.getLogger(AnalysisController.class);
     private static final Pattern UUID_PATTERN =
             Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
 
@@ -37,20 +41,30 @@ public class AnalysisController {
     @ApiResponse(responseCode = "202", description = "분석 요청 접수 완료")
     @ApiResponse(responseCode = "400", description = "잘못된 요청 (빈 파일, 크기 초과 등)",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "503", description = "서버가 바쁨 (동시 분석 한도 초과)",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<AnalysisSubmitResponse> submit(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<AnalysisSubmitResponse> submit(
+            @Parameter(description = "분석할 CSV 접속 로그 파일", required = true)
+            @RequestParam("file") MultipartFile file) {
+        log.info("분석 요청 수신: 파일명={}, 크기={}bytes", file.getOriginalFilename(), file.getSize());
         AnalysisResult result = analysisService.submitAnalysis(file);
         AnalysisSubmitResponse response = AnalysisSubmitResponse.of(
                 result.getAnalysisId(), result.getStatus().name());
+        log.info("분석 요청 접수 완료: analysisId={}", result.getAnalysisId());
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
     @Operation(summary = "분석 결과 조회", description = "analysisId로 분석 결과를 조회한다. PROCESSING 상태이면 집계 필드는 null이다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiResponse(responseCode = "400", description = "잘못된 분석 ID 형식",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "분석 결과를 찾을 수 없음",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{analysisId}")
-    public ResponseEntity<AnalysisResponse> getResult(@PathVariable String analysisId) {
+    public ResponseEntity<AnalysisResponse> getResult(
+            @Parameter(description = "분석 ID (UUID 형식)", example = "550e8400-e29b-41d4-a716-446655440000", required = true)
+            @PathVariable String analysisId) {
         if (!UUID_PATTERN.matcher(analysisId).matches()) {
             throw new IllegalArgumentException("잘못된 분석 ID 형식입니다.");
         }
@@ -58,6 +72,7 @@ public class AnalysisController {
         if (result == null) {
             throw new AnalysisNotFoundException(analysisId);
         }
+        log.info("분석 결과 조회: analysisId={}, status={}", analysisId, result.getStatus());
         return ResponseEntity.ok(AnalysisResponse.from(result));
     }
 }
