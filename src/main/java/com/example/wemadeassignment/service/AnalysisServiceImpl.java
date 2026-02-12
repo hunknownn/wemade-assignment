@@ -88,7 +88,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
             // 2. 집계 결과를 AnalysisResult에 반영
             result.setTotalRequests(aggregator.getTotalRequests());
-            result.getStatusCodeCounts().putAll(aggregator.getStatusCodeCounts());
+            result.getStatusCodeCounts().putAll(aggregator.getTopN(aggregator.getStatusCodeCounts(), properties.topN()));
             result.getPathCounts().putAll(aggregator.getTopN(aggregator.getPathCounts(), properties.topN()));
             result.getIpCounts().putAll(aggregator.getTopN(aggregator.getIpCounts(), properties.topN()));
 
