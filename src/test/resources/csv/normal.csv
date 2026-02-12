@@ -1,0 +1,4 @@
+
+TimeGenerated [UTC],ClientIp,HttpMethod,RequestUri,UserAgent,HttpStatus,HttpVersion,ReceivedBytes,SentBytes,ClientResponseTime,SslProtocol,OriginalRequestUriWithArgs
+"1/29/2026, 5:44:10.000 AM",121.158.115.86,GET,/event/banner/mir2/popup,MyThreadedApp/1.0,200,HTTP/1.1,176,1138,0,TLSv1.2,/event/banner/mir2/popup
+"1/29/2026, 5:44:10.000 AM",61.38.42.234,GET,/bbs/list/mir2free,python-requests/2.25.1,200,HTTP/1.1,167,6023,0,TLSv1.3,/bbs/list/mir2free
