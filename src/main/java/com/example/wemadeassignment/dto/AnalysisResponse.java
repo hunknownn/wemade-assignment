@@ -4,6 +4,7 @@ import com.example.wemadeassignment.domain.AnalysisResult;
 import com.example.wemadeassignment.domain.AnalysisStatus;
 import com.example.wemadeassignment.domain.IpInfo;
 import com.example.wemadeassignment.domain.ParseErrorSample;
+import com.example.wemadeassignment.domain.ResponseTimeStats;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -40,6 +41,9 @@ public record AnalysisResponse(
         @Schema(description = "상위 IP의 상세 정보 (ipinfo 조회 결과)", nullable = true)
         List<IpInfo> ipDetails,
 
+        @Schema(description = "클라이언트 응답 시간 통계", nullable = true)
+        ResponseTimeStats responseTimeStats,
+
         @Schema(description = "파싱 오류 건수", example = "3", nullable = true)
         Integer parseErrorCount,
 
@@ -60,7 +64,7 @@ public record AnalysisResponse(
             return new AnalysisResponse(
                     result.getAnalysisId(),
                     result.getStatus(),
-                    null, null, null, null, null, null, null, null,
+                    null, null, null, null, null, null, null, null, null,
                     result.getCreatedAt(),
                     null,
                     null
@@ -76,6 +80,7 @@ public record AnalysisResponse(
                 Map.copyOf(result.getPathCounts()),
                 Map.copyOf(result.getIpCounts()),
                 List.copyOf(result.getTopIps()),
+                result.getResponseTimeStats(),
                 result.getParseErrorCount(),
                 List.copyOf(result.getParseErrorSamples()),
                 result.getCreatedAt(),

@@ -27,6 +27,7 @@ public class AnalysisResult {
 
     private List<IpInfo> topIps = new ArrayList<>();
     private Map<String, Double> statusGroupRatios = new ConcurrentHashMap<>();
+    private ResponseTimeStats responseTimeStats;
     private int parseErrorCount;
     private List<ParseErrorSample> parseErrorSamples = new ArrayList<>();
 

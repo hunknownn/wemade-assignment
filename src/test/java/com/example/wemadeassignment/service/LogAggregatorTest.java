@@ -1,6 +1,7 @@
 package com.example.wemadeassignment.service;
 
 import com.example.wemadeassignment.domain.AccessLog;
+import com.example.wemadeassignment.domain.ResponseTimeStats;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,12 @@ class LogAggregatorTest {
     private LogAggregator aggregator;
 
     private static AccessLog log(String ip, String path, int status) {
+        return log(ip, path, status, 0.5);
+    }
+
+    private static AccessLog log(String ip, String path, int status, double responseTime) {
         return new AccessLog("2024-01-01T00:00:00", ip, "GET", path,
-                "Mozilla/5.0", status, "HTTP/1.1", 100, 200, 0.5, "TLSv1.2", path);
+                "Mozilla/5.0", status, "HTTP/1.1", 100, 200, responseTime, "TLSv1.2", path);
     }
 
     @BeforeEach
@@ -163,5 +168,71 @@ class LogAggregatorTest {
 
         assertThat(top2).hasSize(2);
         assertThat(top2.values()).allMatch(v -> v == 1L);
+    }
+
+    // --- ResponseTimeStats 테스트 ---
+
+    @Test
+    @DisplayName("응답 시간 통계 — 데이터 없으면 모두 0")
+    void responseTimeStatsEmpty() {
+        ResponseTimeStats stats = aggregator.calculateResponseTimeStats();
+
+        assertThat(stats.min()).isEqualTo(0);
+        assertThat(stats.max()).isEqualTo(0);
+        assertThat(stats.avg()).isEqualTo(0);
+        assertThat(stats.p50()).isEqualTo(0);
+        assertThat(stats.p95()).isEqualTo(0);
+        assertThat(stats.p99()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("응답 시간 통계 — 단건")
+    void responseTimeStatsSingle() {
+        aggregator.aggregate(log("1.1.1.1", "/a", 200, 1.5));
+
+        ResponseTimeStats stats = aggregator.calculateResponseTimeStats();
+
+        assertThat(stats.min()).isEqualTo(1.5);
+        assertThat(stats.max()).isEqualTo(1.5);
+        assertThat(stats.avg()).isEqualTo(1.5);
+        assertThat(stats.p50()).isEqualTo(1.5);
+        assertThat(stats.p95()).isEqualTo(1.5);
+        assertThat(stats.p99()).isEqualTo(1.5);
+    }
+
+    @Test
+    @DisplayName("응답 시간 통계 — 100건 퍼센타일 정확성")
+    void responseTimeStatsPercentiles() {
+        // 1.0, 2.0, 3.0, ..., 100.0 총 100건
+        for (int i = 1; i <= 100; i++) {
+            aggregator.aggregate(log("1.1.1.1", "/a", 200, i));
+        }
+
+        ResponseTimeStats stats = aggregator.calculateResponseTimeStats();
+
+        assertThat(stats.min()).isEqualTo(1.0);
+        assertThat(stats.max()).isEqualTo(100.0);
+        assertThat(stats.avg()).isEqualTo(50.5);
+        assertThat(stats.p50()).isEqualTo(50.0);
+        assertThat(stats.p95()).isEqualTo(95.0);
+        assertThat(stats.p99()).isEqualTo(99.0);
+    }
+
+    @Test
+    @DisplayName("응답 시간 통계 — 비순서 입력에서도 정렬 후 올바른 퍼센타일")
+    void responseTimeStatsUnordered() {
+        double[] times = {5.0, 1.0, 3.0, 2.0, 4.0};
+        for (double t : times) {
+            aggregator.aggregate(log("1.1.1.1", "/a", 200, t));
+        }
+
+        ResponseTimeStats stats = aggregator.calculateResponseTimeStats();
+
+        assertThat(stats.min()).isEqualTo(1.0);
+        assertThat(stats.max()).isEqualTo(5.0);
+        assertThat(stats.avg()).isEqualTo(3.0);
+        assertThat(stats.p50()).isEqualTo(3.0);  // ceil(0.5 * 5) - 1 = 2 → sorted[2] = 3.0
+        assertThat(stats.p95()).isEqualTo(5.0);  // ceil(0.95 * 5) - 1 = 4 → sorted[4] = 5.0
+        assertThat(stats.p99()).isEqualTo(5.0);  // ceil(0.99 * 5) - 1 = 4 → sorted[4] = 5.0
     }
 }

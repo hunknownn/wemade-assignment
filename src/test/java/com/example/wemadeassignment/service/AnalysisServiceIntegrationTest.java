@@ -79,6 +79,10 @@ class AnalysisServiceIntegrationTest {
         // IP 정보 조회 결과
         assertThat(result.getTopIps()).hasSize(2);
 
+        // 응답 시간 통계
+        assertThat(result.getResponseTimeStats()).isNotNull();
+        assertThat(result.getResponseTimeStats().min()).isGreaterThanOrEqualTo(0);
+
         assertThat(result.getCompletedAt()).isNotNull();
     }
 
