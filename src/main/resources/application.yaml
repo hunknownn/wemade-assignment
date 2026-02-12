@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: wemade-assignment
+
+  # 파일 업로드 크기 제한
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      enabled: true
+
+# 분석 설정
+analysis:
+  max-file-size: 52428800  # 50MB (bytes)
+  max-lines: 200000        # 최대 라인 수
+  top-n: 10                # Top N 통계
+
+# ipinfo API 설정
+ipinfo:
+  token: ${IPINFO_TOKEN:your-token-here}
+  base-url: https://api.ipinfo.io/lite
+  timeout: 3000            # 타임아웃 (ms)
+  max-retries: 2           # 최대 재시도 횟수
+  cache:
+    max-size: 10000        # 캐시 최대 크기
+    expire-after-write: 3600  # 캐시 만료 시간 (초)
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
