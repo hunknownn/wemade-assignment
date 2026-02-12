@@ -109,7 +109,7 @@ public class CsvLogParserImpl implements CsvLogParser {
 
     /**
      * CSV 한 줄을 상태 머신으로 파싱하여 필드 목록을 추출한 뒤 AccessLog로 변환한다.
-     * RFC 4180: 따옴표 내 쉼표와 이스케이프된 따옴표("")를 처리.
+     * RFC 4180: 따옴표 내 쉼표와 이스케이프된 따옴표({@code ""})를 처리.
      */
     AccessLog parseLine(String line) {
         List<String> fields = splitCsvLine(line);
@@ -141,10 +141,12 @@ public class CsvLogParserImpl implements CsvLogParser {
 
     /**
      * 상태 머신 기반 CSV 라인 분할.
-     * 따옴표 내 쉼표를 필드 구분자로 취급하지 않고, ""를 "로 치환.
+     * 따옴표 내 쉼표를 필드 구분자로 취급하지 않고, {@code ""}를 {@code "}로 치환.
      *
-     * 예시 line:
-     * "1/29/2026, 5:44:10.000 AM",112.144.4.88,GET,/assets/Dormancy.css,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",200,HTTP/1.1,2594,2653,0,TLSv1.3,/assets/Dormancy.css
+     * <p>예시:
+     * <pre>{@code
+     * "1/29/2026, 5:44:10.000 AM",112.144.4.88,GET,/assets/Dormancy.css,"Mozilla/5.0 (Windows NT 10.0; Win64; x64)",200,HTTP/1.1,2594,2653,0,TLSv1.3,/assets/Dormancy.css
+     * }</pre>
      */
     List<String> splitCsvLine(String line) {
         List<String> fields = new ArrayList<>();

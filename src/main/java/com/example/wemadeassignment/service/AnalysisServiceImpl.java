@@ -82,7 +82,11 @@ public class AnalysisServiceImpl implements AnalysisService {
         AnalysisResult result = analysisRepository.findById(analysisId).orElseThrow();
 
         try (InputStream is = new BufferedInputStream(new FileInputStream(tempFile.toFile()))) {
+            long loadElapsed = System.currentTimeMillis() - startTime;
+            log.debug("임시 파일 로드 완료: analysisId={}, 소요시간={}ms", analysisId, loadElapsed);
+
             // 1. CSV 파싱 + 집계
+            long parseStart = System.currentTimeMillis();
             LogAggregator aggregator = new LogAggregator();
             ParseStatistics stats = csvLogParser.parse(is, aggregator::aggregate);
 
@@ -91,12 +95,15 @@ public class AnalysisServiceImpl implements AnalysisService {
             result.getStatusCodeCounts().putAll(aggregator.getStatusCodeCounts());
             result.getPathCounts().putAll(aggregator.getTopN(aggregator.getPathCounts(), properties.topN()));
             result.getIpCounts().putAll(aggregator.getTopN(aggregator.getIpCounts(), properties.topN()));
+            long parseElapsed = System.currentTimeMillis() - parseStart;
 
             // 3. 상위 N개 IP에 대해 ipinfo 조회
+            long enrichStart = System.currentTimeMillis();
             List<String> topIpList = aggregator.getTopN(aggregator.getIpCounts(), properties.topN())
                     .keySet().stream().toList();
             List<IpInfo> ipInfos = ipEnrichmentService.enrich(topIpList);
             result.setTopIps(ipInfos);
+            long enrichElapsed = System.currentTimeMillis() - enrichStart;
 
             // 4. 파싱 오류 정보
             result.setParseErrorCount(stats.errorCount());
@@ -107,8 +114,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
             result.complete();
 
-            long elapsed = System.currentTimeMillis() - startTime;
-            log.info("분석 완료: analysisId={}, 총 {}건, 소요시간={}ms", analysisId, stats.totalLinesProcessed(), elapsed);
+            long totalElapsed = System.currentTimeMillis() - startTime;
+            log.info("분석 완료: analysisId={}, 총 {}건, 파싱={}ms, IP조회={}ms, 전체={}ms",
+                    analysisId, stats.totalLinesProcessed(), parseElapsed, enrichElapsed, totalElapsed);
 
         } catch (Exception e) {
             result.fail(e.getMessage());
@@ -120,21 +128,27 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
+            log.warn("파일 검증 실패: 빈 파일");
             throw new IllegalArgumentException("파일이 비어있습니다.");
         }
         if (file.getSize() > properties.maxFileSize()) {
+            log.warn("파일 검증 실패: 크기 초과 ({}bytes > {}bytes)", file.getSize(), properties.maxFileSize());
             throw new IllegalArgumentException("파일 크기가 " + properties.maxFileSize() + " bytes를 초과합니다.");
         }
         String filename = file.getOriginalFilename();
         if (filename == null || !filename.toLowerCase().endsWith(".csv")) {
+            log.warn("파일 검증 실패: 잘못된 확장자 ({})", filename);
             throw new IllegalArgumentException("CSV 파일만 업로드 가능합니다.");
         }
     }
 
     private Path saveTempFile(MultipartFile file) {
         try {
+            long start = System.currentTimeMillis();
             Path tempFile = Files.createTempFile("analysis-", ".csv");
             file.transferTo(tempFile.toFile());
+            log.debug("임시 파일 저장 완료: 크기={}bytes, 소요시간={}ms",
+                    file.getSize(), System.currentTimeMillis() - start);
             return tempFile;
         } catch (IOException e) {
             throw new RuntimeException("임시 파일 저장 실패", e);

@@ -6,6 +6,8 @@ import com.example.wemadeassignment.dto.AnalysisSubmitResponse;
 import com.example.wemadeassignment.dto.ErrorResponse;
 import com.example.wemadeassignment.exception.AnalysisNotFoundException;
 import com.example.wemadeassignment.service.AnalysisService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,6 +27,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/v1/analysis")
 public class AnalysisController {
 
+    private static final Logger log = LoggerFactory.getLogger(AnalysisController.class);
     private static final Pattern UUID_PATTERN =
             Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
 
@@ -44,9 +47,11 @@ public class AnalysisController {
     public ResponseEntity<AnalysisSubmitResponse> submit(
             @Parameter(description = "분석할 CSV 접속 로그 파일", required = true)
             @RequestParam("file") MultipartFile file) {
+        log.info("분석 요청 수신: 파일명={}, 크기={}bytes", file.getOriginalFilename(), file.getSize());
         AnalysisResult result = analysisService.submitAnalysis(file);
         AnalysisSubmitResponse response = AnalysisSubmitResponse.of(
                 result.getAnalysisId(), result.getStatus().name());
+        log.info("분석 요청 접수 완료: analysisId={}", result.getAnalysisId());
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
@@ -67,6 +72,7 @@ public class AnalysisController {
         if (result == null) {
             throw new AnalysisNotFoundException(analysisId);
         }
+        log.info("분석 결과 조회: analysisId={}, status={}", analysisId, result.getStatus());
         return ResponseEntity.ok(AnalysisResponse.from(result));
     }
 }
