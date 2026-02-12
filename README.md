@@ -101,6 +101,14 @@ curl http://localhost:8080/api/v1/analysis/550e8400-e29b-41d4-a716-446655440000
       "continent": "Asia"
     }
   ],
+  "responseTimeStats": {
+    "min": 0.0,
+    "max": 12.345,
+    "avg": 1.234,
+    "p50": 0.512,
+    "p95": 3.456,
+    "p99": 8.901
+  },
   "parseErrorCount": 2,
   "parseErrorSamples": [
     {
@@ -124,7 +132,7 @@ com.example.wemadeassignment/
 ├── parser/             CsvLogParser — RFC 4180 호환 상태 머신 파서
 ├── client/             IpInfoApiClient — ipinfo Lite API 호출
 ├── repository/         InMemoryAnalysisRepository — ConcurrentHashMap 저장소
-├── domain/             AccessLog, AnalysisResult, IpInfo, AnalysisStatus
+├── domain/             AccessLog, AnalysisResult, IpInfo, ResponseTimeStats, AnalysisStatus
 ├── dto/                AnalysisResponse, AnalysisSubmitResponse, ErrorResponse
 ├── config/             AppConfig, AnalysisProperties, IpInfoProperties
 └── exception/          GlobalExceptionHandler, 커스텀 예외 클래스
