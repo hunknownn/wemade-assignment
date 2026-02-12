@@ -5,6 +5,7 @@ import com.example.wemadeassignment.domain.AnalysisResult;
 import com.example.wemadeassignment.domain.AnalysisStatus;
 import com.example.wemadeassignment.domain.IpInfo;
 import com.example.wemadeassignment.domain.ParseErrorSample;
+import com.example.wemadeassignment.domain.ResponseTimeStats;
 import com.example.wemadeassignment.parser.CsvLogParser;
 import com.example.wemadeassignment.parser.ParseStatistics;
 import com.example.wemadeassignment.repository.AnalysisRepository;
@@ -221,5 +222,19 @@ class AnalysisServiceImplTest {
         service.submitAnalysis(csvFile("header\ndata"));
 
         verify(ipEnrichmentService).enrich(any());
+    }
+
+    @Test
+    @DisplayName("분석 완료 시 responseTimeStats가 null이 아님")
+    void responseTimeStatsPopulated() {
+        when(csvLogParser.parse(any(), any()))
+                .thenReturn(new ParseStatistics(1, 1, 0, List.of()));
+        when(ipEnrichmentService.enrich(any())).thenReturn(List.of());
+
+        AnalysisResult result = service.submitAnalysis(csvFile("header\ndata"));
+
+        assertThat(result.getStatus()).isEqualTo(AnalysisStatus.COMPLETED);
+        ResponseTimeStats stats = result.getResponseTimeStats();
+        assertThat(stats).isNotNull();
     }
 }

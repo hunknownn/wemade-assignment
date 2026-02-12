@@ -91,6 +91,7 @@ public class AnalysisServiceImpl implements AnalysisService {
             ParseStatistics stats = csvLogParser.parse(is, aggregator::aggregate);
 
             // 2. 집계 결과를 AnalysisResult에 반영
+            result.setResponseTimeStats(aggregator.calculateResponseTimeStats());
             result.setTotalRequests(aggregator.getTotalRequests());
             result.getStatusCodeCounts().putAll(aggregator.getTopN(aggregator.getStatusCodeCounts(), properties.topN()));
             result.getPathCounts().putAll(aggregator.getTopN(aggregator.getPathCounts(), properties.topN()));
