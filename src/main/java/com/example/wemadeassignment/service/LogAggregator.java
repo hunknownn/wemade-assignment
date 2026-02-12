@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * CSV 파싱 콜백으로 사용되는 스트리밍 집계기.
- * 파싱된 로그 한 건씩 받아서 IP/Path/StatusCode별 카운트를 누적한다.
+ * 파싱된 로그 한 건씩 받아서 IP/Path/StatusCode별 카운트와 응답 시간을 누적한다.
  */
 public class LogAggregator {
 
